@@ -36,20 +36,20 @@ back/
 │       ├── order_service.py
 │       └── analytics_service.py
 ├── requirements.txt         # Python 패키지 의존성
-└── .env                     # 환경 변수 (생성 필요)
+└── bizupenv/                     # 환경 변수 (생성 필요)
 ```
 
 ## 설치 및 실행
 
-1. 의존성 설치:
+1. 의존성 설치 (venv 활성화하고 설치하세요!):
 ```bash
 pip install -r requirements.txt
 ```
 
 2. 환경 변수 설정 (.env 파일 생성):
 ```
-DATABASE_URL=sqlite:///./bizup.db
-SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:미정
+SECRET_KEY=미정
 ```
 
 3. 서버 실행:
