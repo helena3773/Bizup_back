@@ -41,6 +41,14 @@ GET /api/v1/inventory
 ```
 GET /api/v1/inventory/stats
 ```
+**응답 예시**:
+```json
+{
+  "total_items": 150,
+  "low_stock_count": 12,
+  "out_of_stock_count": 3
+}
+```
 
 ### 재고 부족 목록
 ```
@@ -56,6 +64,8 @@ GET /api/v1/inventory/{item_id}
 ```
 POST /api/v1/inventory
 ```
+**응답**: 201 Created
+
 **요청 본문**:
 ```json
 {
@@ -72,6 +82,8 @@ POST /api/v1/inventory
 ```
 PUT /api/v1/inventory/{item_id}
 ```
+**응답**: 200 OK
+
 **요청 본문** (모든 필드 선택):
 ```json
 {
@@ -84,6 +96,7 @@ PUT /api/v1/inventory/{item_id}
 ```
 DELETE /api/v1/inventory/{item_id}
 ```
+**응답**: 204 No Content
 
 ---
 
@@ -115,6 +128,8 @@ GET /api/v1/orders/recommendations
 ```
 POST /api/v1/orders
 ```
+**응답**: 201 Created
+
 **요청 본문**:
 ```json
 {
@@ -161,10 +176,32 @@ GET /api/v1/out-of-stock
 ```
 POST /api/v1/out-of-stock/{item_id}/restock
 ```
-**쿼리 파라미터**:
-- `quantity`: float - 재입고 수량
+**쿼리 파라미터** (필수):
+- `quantity`: float (필수, > 0) - 재입고 수량
 
-**예시**: `POST /api/v1/out-of-stock/1/restock?quantity=50`
+**예시**: 
+```
+POST /api/v1/out-of-stock/1/restock?quantity=50
+```
+
+**응답 예시**:
+```json
+{
+  "message": "재입고가 완료되었습니다",
+  "item": {
+    "id": 1,
+    "name": "딸기 시럽",
+    "category": "식재료",
+    "quantity": 50,
+    "unit": "L",
+    "min_quantity": 10,
+    "price": 5000,
+    "last_updated": "2025-10-09",
+    "created_at": "2025-10-09T10:00:00",
+    "updated_at": "2025-10-09T15:00:00"
+  }
+}
+```
 
 ---
 
@@ -184,6 +221,8 @@ GET /api/v1/employees/{employee_id}
 ```
 POST /api/v1/employees
 ```
+**응답**: 201 Created
+
 **요청 본문**:
 ```json
 {
@@ -198,6 +237,8 @@ POST /api/v1/employees
 ```
 PUT /api/v1/employees/{employee_id}
 ```
+**응답**: 200 OK
+
 **요청 본문** (모든 필드 선택):
 ```json
 {
@@ -212,6 +253,7 @@ PUT /api/v1/employees/{employee_id}
 ```
 DELETE /api/v1/employees/{employee_id}
 ```
+**응답**: 204 No Content
 
 ---
 
@@ -226,6 +268,8 @@ GET /api/v1/store
 ```
 PUT /api/v1/store
 ```
+**응답**: 200 OK
+
 **요청 본문**:
 ```json
 {
@@ -244,6 +288,8 @@ GET /api/v1/store/notifications
 ```
 PUT /api/v1/store/notifications
 ```
+**응답**: 200 OK
+
 **요청 본문**:
 ```json
 {
@@ -263,7 +309,7 @@ PUT /api/v1/store/notifications
 GET /
 ```
 
-### 헬스 체크
+### 헬스 체크 (서버 상태 확인인)
 ```
 GET /health
 ```
