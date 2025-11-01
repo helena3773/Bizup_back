@@ -2,6 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
+from app.models import (
+    InventoryItem,
+    Order,
+    OrderItem,
+    Employee,
+    Store,
+    NotificationSettings
+)
 from app.routers import inventory, orders, outofstock, employees, store
 
 # FastAPI 애플리케이션 생성
