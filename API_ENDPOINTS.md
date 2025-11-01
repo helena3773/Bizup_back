@@ -309,7 +309,7 @@ PUT /api/v1/store/notifications
 GET /
 ```
 
-### 헬스 체크 (서버 상태 확인인)
+### 헬스 체크 (서버 상태 확인)
 ```
 GET /health
 ```
