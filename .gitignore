@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 .venv
+
+# Virtual environment
+bizupenv/
 
 # Database
 *.db
@@ -27,5 +27,3 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
-
-bizupenv/
