@@ -6,9 +6,6 @@ __pycache__/
 .Python
 .venv
 
-# Virtual environment
-bizupenv/
-
 # Database
 *.db
 *.sqlite
