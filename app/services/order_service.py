@@ -7,21 +7,17 @@ from typing import List, Dict
 
 
 def calculate_avg_daily_usage(inventory_item: InventoryItem, days: int = 7) -> float:
-    """일평균 사용량 계산 (예시: 실제로는 판매 기록을 기반으로 계산)"""
-    # TODO: 실제 판매 데이터를 기반으로 계산하도록 수정
-    # 현재는 재고와 최소 재고를 기반으로 추정
+    # TODO: 실제 판매 데이터를 기반으로 계산하도록 수정할 예정정
     if inventory_item.quantity == 0:
-        return 1.0  # 품절된 경우 기본값
+        return 1.0
     
-    # 간단한 추정: 현재 재고가 최소 재고 대비 얼마나 있는지로 계산
-    estimated_usage = max(0.5, inventory_item.min_quantity / 30.0)  # 월간 최소재고량 기준
+    estimated_usage = max(0.5, inventory_item.min_quantity / 30.0)
     return estimated_usage
 
 
 def calculate_days_until_out_of_stock(current_stock: float, avg_daily: float) -> int:
-    """품절까지 예상 일수 계산"""
     if avg_daily <= 0:
-        return 999  # 무제한
+        return 999
     return int(current_stock / avg_daily)
 
 
@@ -31,15 +27,12 @@ def calculate_recommended_quantity(
     avg_daily: float,
     days_buffer: int = 7
 ) -> float:
-    """권장 발주량 계산"""
-    # 필요한 최소 재고량 + 버퍼 기간 동안의 사용량
     needed_stock = min_stock + (avg_daily * days_buffer)
     recommended = needed_stock - current_stock
     return max(0, recommended)
 
 
 def determine_priority(days_until_out: int) -> OrderPriority:
-    """우선순위 결정"""
     if days_until_out <= 2:
         return OrderPriority.HIGH
     elif days_until_out <= 5:
@@ -49,7 +42,6 @@ def determine_priority(days_until_out: int) -> OrderPriority:
 
 
 def get_order_recommendations(db: Session) -> List[Dict]:
-    """발주 추천 목록 조회"""
     inventory_items = db.query(InventoryItem).all()
     recommendations = []
     
@@ -57,7 +49,6 @@ def get_order_recommendations(db: Session) -> List[Dict]:
         avg_daily = calculate_avg_daily_usage(item)
         days_until_out = calculate_days_until_out_of_stock(item.quantity, avg_daily)
         
-        # 재고가 부족하거나 곧 부족할 예정인 경우만 추천
         if item.quantity <= item.min_quantity or days_until_out <= 7:
             recommended_qty = calculate_recommended_quantity(
                 item.quantity,
@@ -82,7 +73,6 @@ def get_order_recommendations(db: Session) -> List[Dict]:
                     "days_until_out_of_stock": days_until_out
                 })
     
-    # 우선순위에 따라 정렬 (긴급 > 보통 > 낮음)
     priority_order = {"high": 0, "medium": 1, "low": 2}
     recommendations.sort(key=lambda x: priority_order.get(x["priority"].value, 3))
     
@@ -90,7 +80,6 @@ def get_order_recommendations(db: Session) -> List[Dict]:
 
 
 def create_order(db: Session, order_data: OrderCreate):
-    """발주 생성"""
     order = Order(status="pending")
     db.add(order)
     db.flush()

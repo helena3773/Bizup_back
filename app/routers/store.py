@@ -14,7 +14,6 @@ router = APIRouter(prefix="/store", tags=["가게 설정"])
 
 @router.get("/", response_model=StoreResponse)
 def get_store(db: Session = Depends(get_db)):
-    """가게 정보 조회"""
     store = db.query(Store).first()
     if not store:
         # 기본 가게 정보 생성
@@ -27,7 +26,6 @@ def get_store(db: Session = Depends(get_db)):
 
 @router.put("/", response_model=StoreResponse)
 def update_store(store_data: StoreUpdate, db: Session = Depends(get_db)):
-    """가게 정보 업데이트"""
     store = db.query(Store).first()
     if not store:
         store = Store(**store_data.dict(exclude_unset=True))
@@ -44,7 +42,6 @@ def update_store(store_data: StoreUpdate, db: Session = Depends(get_db)):
 
 @router.get("/notifications", response_model=NotificationSettingsResponse)
 def get_notification_settings(db: Session = Depends(get_db)):
-    """알림 설정 조회"""
     settings = db.query(NotificationSettings).first()
     if not settings:
         # 기본 알림 설정 생성
@@ -65,7 +62,6 @@ def update_notification_settings(
     settings_data: NotificationSettingsUpdate,
     db: Session = Depends(get_db)
 ):
-    """알림 설정 업데이트"""
     settings = db.query(NotificationSettings).first()
     if not settings:
         settings = NotificationSettings(**settings_data.dict())

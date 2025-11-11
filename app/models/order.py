@@ -46,7 +46,6 @@ class OrderItem(Base):
 
 
 class OrderRecommendation(Base):
-    """발주 추천을 위한 계산용 테이블 (뷰 또는 임시 테이블)"""
     __tablename__ = "order_recommendations"
 
     id = Column(Integer, primary_key=True, index=True)

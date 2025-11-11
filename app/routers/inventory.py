@@ -20,7 +20,6 @@ def get_inventory_items(
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
-    """재고 목록 조회"""
     items = inventory_service.get_inventory_items(db, skip=skip, limit=limit, search=search)
     
     result = []
@@ -46,7 +45,6 @@ def get_inventory_items(
 
 @router.get("/stats")
 def get_inventory_stats(db: Session = Depends(get_db)):
-    """재고 통계 조회"""
     from app.services import analytics_service
     
     stats = analytics_service.get_inventory_stats(db)
@@ -55,7 +53,6 @@ def get_inventory_stats(db: Session = Depends(get_db)):
 
 @router.get("/low-stock", response_model=List[InventoryItemWithStatus])
 def get_low_stock_items(db: Session = Depends(get_db)):
-    """재고 부족 아이템 조회"""
     items = inventory_service.get_low_stock_items(db)
     result = []
     for item in items:
@@ -79,7 +76,6 @@ def get_low_stock_items(db: Session = Depends(get_db)):
 
 @router.get("/{item_id}", response_model=InventoryItemResponse)
 def get_inventory_item(item_id: int, db: Session = Depends(get_db)):
-    """특정 재고 아이템 조회"""
     item = inventory_service.get_inventory_item(db, item_id)
     if not item:
         raise HTTPException(status_code=404, detail="재고 아이템을 찾을 수 없습니다")
@@ -88,7 +84,6 @@ def get_inventory_item(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/", response_model=InventoryItemResponse, status_code=201)
 def create_inventory_item(item: InventoryItemCreate, db: Session = Depends(get_db)):
-    """재고 아이템 생성"""
     return inventory_service.create_inventory_item(db, item)
 
 
@@ -98,7 +93,6 @@ def update_inventory_item(
     item: InventoryItemUpdate,
     db: Session = Depends(get_db)
 ):
-    """재고 아이템 업데이트"""
     updated_item = inventory_service.update_inventory_item(db, item_id, item)
     if not updated_item:
         raise HTTPException(status_code=404, detail="재고 아이템을 찾을 수 없습니다")
@@ -107,7 +101,6 @@ def update_inventory_item(
 
 @router.delete("/{item_id}", status_code=204)
 def delete_inventory_item(item_id: int, db: Session = Depends(get_db)):
-    """재고 아이템 삭제"""
     success = inventory_service.delete_inventory_item(db, item_id)
     if not success:
         raise HTTPException(status_code=404, detail="재고 아이템을 찾을 수 없습니다")

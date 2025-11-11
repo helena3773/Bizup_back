@@ -6,7 +6,6 @@ from datetime import date
 
 
 def get_inventory_items(db: Session, skip: int = 0, limit: int = 100, search: str = None):
-    """재고 목록 조회"""
     query = db.query(InventoryItem)
     
     if search:
@@ -22,12 +21,10 @@ def get_inventory_items(db: Session, skip: int = 0, limit: int = 100, search: st
 
 
 def get_inventory_item(db: Session, item_id: int):
-    """특정 재고 아이템 조회"""
     return db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
 
 
 def create_inventory_item(db: Session, item: InventoryItemCreate):
-    """재고 아이템 생성"""
     db_item = InventoryItem(
         name=item.name,
         category=item.category,
@@ -44,7 +41,6 @@ def create_inventory_item(db: Session, item: InventoryItemCreate):
 
 
 def update_inventory_item(db: Session, item_id: int, item: InventoryItemUpdate):
-    """재고 아이템 업데이트"""
     db_item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
     if not db_item:
         return None
@@ -60,7 +56,6 @@ def update_inventory_item(db: Session, item_id: int, item: InventoryItemUpdate):
 
 
 def delete_inventory_item(db: Session, item_id: int):
-    """재고 아이템 삭제"""
     db_item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
     if not db_item:
         return False
@@ -70,7 +65,6 @@ def delete_inventory_item(db: Session, item_id: int):
 
 
 def get_stock_status(quantity: float, min_quantity: float) -> str:
-    """재고 상태 계산"""
     if quantity == 0:
         return "품절"
     elif quantity <= min_quantity:
@@ -80,7 +74,6 @@ def get_stock_status(quantity: float, min_quantity: float) -> str:
 
 
 def get_low_stock_items(db: Session):
-    """재고 부족 아이템 조회"""
     return db.query(InventoryItem).filter(
         InventoryItem.quantity <= InventoryItem.min_quantity,
         InventoryItem.quantity > 0
@@ -88,6 +81,5 @@ def get_low_stock_items(db: Session):
 
 
 def get_out_of_stock_items(db: Session):
-    """품절 아이템 조회"""
     return db.query(InventoryItem).filter(InventoryItem.quantity == 0).all()
 

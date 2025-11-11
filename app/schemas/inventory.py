@@ -36,7 +36,6 @@ class InventoryItemResponse(InventoryItemBase):
 
 
 class StockStatus(str):
-    """재고 상태"""
     NORMAL = "정상"
     LOW = "부족"
     OUT_OF_STOCK = "품절"

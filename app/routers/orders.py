@@ -10,7 +10,6 @@ router = APIRouter(prefix="/orders", tags=["발주 관리"])
 
 @router.get("/recommendations", response_model=List[OrderRecommendationResponse])
 def get_order_recommendations(db: Session = Depends(get_db)):
-    """발주 추천 목록 조회"""
     recommendations = order_service.get_order_recommendations(db)
     
     result = []
@@ -33,6 +32,5 @@ def get_order_recommendations(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=OrderResponse, status_code=201)
 def create_order(order: OrderCreate, db: Session = Depends(get_db)):
-    """발주 생성"""
     return order_service.create_order(db, order)
 

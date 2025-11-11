@@ -15,7 +15,6 @@ Base = declarative_base()
 
 
 def get_db():
-    """데이터베이스 세션 의존성"""
     db = SessionLocal()
     try:
         yield db
@@ -24,5 +23,4 @@ def get_db():
 
 
 def init_db():
-    """데이터베이스 초기화"""
     Base.metadata.create_all(bind=engine)

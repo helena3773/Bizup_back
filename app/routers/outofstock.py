@@ -10,7 +10,6 @@ router = APIRouter(prefix="/out-of-stock", tags=["품절 관리"])
 
 @router.get("/", response_model=List[OutOfStockItemResponse])
 def get_out_of_stock_items(db: Session = Depends(get_db)):
-    """품절 상품 목록 조회"""
     return analytics_service.get_out_of_stock_items(db)
 
 
@@ -20,7 +19,6 @@ def restock_item(
     quantity: float = Query(..., gt=0, description="재입고 수량"),
     db: Session = Depends(get_db)
 ):
-    """재입고 완료 처리 (재고 수량 업데이트)"""
     from app.schemas.inventory import InventoryItemUpdate
     
     item = inventory_service.get_inventory_item(db, item_id)
