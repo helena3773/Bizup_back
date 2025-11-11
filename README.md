@@ -41,7 +41,7 @@ back/
 
 ## 설치 및 실행
 
-1. 의존성 설치 (venv 활성화하고 설치하세요!):
+1. 의존성 설치 (venv 활성화하고 설치하기!):
 ```bash
 pip install -r requirements.txt
 ```
