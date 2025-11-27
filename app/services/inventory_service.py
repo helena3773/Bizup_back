@@ -5,7 +5,8 @@ from app.schemas.inventory import InventoryItemCreate, InventoryItemUpdate
 from datetime import date
 
 
-def get_inventory_items(db: Session, skip: int = 0, limit: int = 100, search: str = None):
+def get_inventory_items(db: Session, skip: int = 0, limit: int = 1000, search: str = None):
+    """재고 목록 조회 (기본 limit을 1000으로 증가)"""
     query = db.query(InventoryItem)
     
     if search:
@@ -17,7 +18,9 @@ def get_inventory_items(db: Session, skip: int = 0, limit: int = 100, search: st
             )
         )
     
-    return query.offset(skip).limit(limit).all()
+    items = query.offset(skip).limit(limit).all()
+    print(f"📦 재고 조회: 총 {len(items)}개 항목 반환 (skip={skip}, limit={limit}, search={search})")
+    return items
 
 
 def get_inventory_item(db: Session, item_id: int):

@@ -10,7 +10,7 @@ from app.models import (
     Store,
     NotificationSettings
 )
-from app.routers import inventory, orders, outofstock, employees, store
+from app.routers import inventory, orders, outofstock, employees, store, sales, menus
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -35,6 +35,8 @@ app.include_router(orders.router, prefix=settings.API_V1_PREFIX)
 app.include_router(outofstock.router, prefix=settings.API_V1_PREFIX)
 app.include_router(employees.router, prefix=settings.API_V1_PREFIX)
 app.include_router(store.router, prefix=settings.API_V1_PREFIX)
+app.include_router(sales.router, prefix=settings.API_V1_PREFIX)
+app.include_router(menus.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
