@@ -78,6 +78,6 @@ CSV 파일로 메뉴를 등록하고, 가상 매출 시뮬레이터를 통해 �
 
 빠른 시작:
 1. 백엔드 서버 실행: `uvicorn app.main:app --reload`
-2. CSV 파일 업로드: 프로그램 '메뉴 관리' 탭에서 직접접
+2. CSV 파일 업로드: 프로그램 '메뉴 관리' 탭에서 직접
 3. 시뮬레이터 실행: `python sales_simulator.py`
 
