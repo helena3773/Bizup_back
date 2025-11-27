@@ -9,14 +9,22 @@ import glob
 
 
 class SalesSimulator:
+    DEFAULT_DUMMY_FILENAME = "small_file.csv"
+
     def __init__(self, backend_url: str = "http://127.0.0.1:8000", interval_seconds: int = 60, # 평소에는 600으로
                  simulation_mode: bool = True, dummy_csv_file: Optional[str] = None):
         self.backend_url = backend_url
         self.interval_seconds = interval_seconds
         self.simulation_mode = simulation_mode
-        self.dummy_csv_file = dummy_csv_file
         self.menus = []
         self._script_dir = os.path.dirname(os.path.abspath(__file__))
+        default_csv_path = os.path.join(self._script_dir, "dummy_data", self.DEFAULT_DUMMY_FILENAME)
+        if dummy_csv_file:
+            self.dummy_csv_file = dummy_csv_file
+        elif os.path.exists(default_csv_path):
+            self.dummy_csv_file = self.DEFAULT_DUMMY_FILENAME
+        else:
+            self.dummy_csv_file = None
         
     async def fetch_menus(self) -> List[str]:
         urls_to_try = [
@@ -154,7 +162,7 @@ class SalesSimulator:
                 False if selected_norm_case.startswith(dummy_dir_norm) else True
             )
     
-    async def load_dummy_csv(self, csv_filename: Optional[str] = None) -> bool:
+    async def load_dummy_csv(self, csv_filename: Optional[str] = None, mode: str = "reset") -> bool:
         csv_info = self.resolve_csv_file(csv_filename)
         if not csv_info:
             return False
@@ -174,7 +182,8 @@ class SalesSimulator:
                 files = {"file": (csv_display_name, csv_content.encode('utf-8'), "text/csv")}
                 response = await client.post(
                     f"{self.backend_url}/api/v1/menus/upload-csv",
-                    files=files
+                    files=files,
+                    params={"mode": mode}
                 )
                 
                 if response.status_code == 200:

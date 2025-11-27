@@ -72,7 +72,7 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
     for menu in menus:
         print(f"  - {menu.name}: {len(menu.ingredients)}개 재료")
         for ing in menu.ingredients:
-            print(f"    * {ing.ingredient_name} ({ing.quantity}{ing.unit})")
+            print(f"    * {ing.ingredient_name} ({ing.quantity})")
     
     all_ingredients: Set[str] = set()
     for menu_data in menus:

@@ -29,9 +29,6 @@ async def upload_menu_csv(
         from app.models.inventory import InventoryItem
         total_inventory_count = db.query(InventoryItem).count()
         
-        ingredient_inventory_count = db.query(InventoryItem).filter(
-            InventoryItem.category == "미정"
-        ).count()
         
         action_label = "추가" if mode == "add" else "초기화"
         message = f"[{action_label}] {len(menus)}개 메뉴 데이터를 처리했습니다."
@@ -45,7 +42,6 @@ async def upload_menu_csv(
         print(f"   - 메뉴: {len(menus)}개")
         print(f"   - 재료: {len(inventory_items)}개")
         print(f"   - 전체 재고 항목: {total_inventory_count}개")
-        print(f"   - '미정' 카테고리 재고: {ingredient_inventory_count}개")
         print(f"{'='*60}\n")
         
         return {
@@ -58,7 +54,6 @@ async def upload_menu_csv(
             "ingredients_registered": stats["inventory_registered"],
             "ingredient_names": ingredient_names,
             "total_inventory_count": total_inventory_count,
-            "ingredient_inventory_count": ingredient_inventory_count,
             "menus": menus
         }
     except Exception as e:
