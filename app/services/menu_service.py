@@ -8,7 +8,6 @@ from app.services import inventory_service
 
 
 def parse_menu_csv(csv_content: str) -> List[MenuCreate]:
-    """CSV 내용을 파싱하여 메뉴 리스트 반환"""
     menus = []
     lines = csv_content.strip().split('\n')
     print(f"CSV 라인 수: {len(lines)}")
@@ -30,18 +29,17 @@ def parse_menu_csv(csv_content: str) -> List[MenuCreate]:
             if not ingredient_str:
                 continue
                 
-            # "재료명-수량" 형식 파싱
             if '-' in ingredient_str:
                 name_part, qty_part = ingredient_str.rsplit('-', 1)
                 try:
                     quantity = float(qty_part)
                     ingredient_name = name_part.strip()
                     
-                    if ingredient_name:  # 재료명이 비어있지 않은 경우만
+                    if ingredient_name:
                         ingredients.append(MenuIngredientCreate(
                             ingredient_name=ingredient_name,
                             quantity=quantity,
-                            unit="ml"  # 기본 단위, 필요시 파싱
+                            unit="ml"
                         ))
                         print(f"  ✓ 재료 파싱 성공: {ingredient_name}-{quantity}")
                     else:
@@ -62,7 +60,6 @@ def parse_menu_csv(csv_content: str) -> List[MenuCreate]:
 
 
 def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tuple[List[Menu], List[InventoryItem], Dict[str, int]]:
-    """CSV 내용을 파싱하여 메뉴들을 DB에 저장하고, 재료들을 재고에 자동 등록"""
     mode = (mode or "add").lower()
     if mode not in {"add", "reset"}:
         mode = "add"
@@ -77,7 +74,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
         for ing in menu.ingredients:
             print(f"    * {ing.ingredient_name} ({ing.quantity}{ing.unit})")
     
-    # 모든 재료 수집 (중복 제거)
     all_ingredients: Set[str] = set()
     for menu_data in menus:
         for ing_data in menu_data.ingredients:
@@ -98,7 +94,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
         db.commit()
         print("기존 메뉴/재료/재고 삭제 완료.")
     
-    # 재료들을 재고에 자동 등록
     created_inventory_items = []
     skipped_items = []
     new_items_count = 0
@@ -110,13 +105,11 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
             
         ingredient_name = ingredient_name.strip()
         
-        # 이미 재고에 있는지 확인 (정확한 이름 매칭)
         existing_item = db.query(InventoryItem).filter(
             InventoryItem.name == ingredient_name
         ).first()
         
         if not existing_item:
-            # 재고에 없으면 새로 생성 (초기화 상태)
             inventory_data = InventoryItemCreate(
                 name=ingredient_name,
                 category="-",
@@ -135,7 +128,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
                 print(f"재고 등록 실패 ({ingredient_name}): {e}")
                 import traceback
                 traceback.print_exc()
-                # 실패해도 계속 진행
         else:
             skipped_items.append(ingredient_name)
             print(f"재고에 이미 존재: {ingredient_name} (ID: {existing_item.id})")
@@ -145,7 +137,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
     print(f"   - 신규 등록: {new_items_count}개")
     print(f"   - 기존 항목: {len(skipped_items)}개")
     
-    # 실제 DB에 등록된 재고 항목 수 확인
     actual_count = db.query(InventoryItem).count()
     print(f"실제 DB의 재고 항목 수: {actual_count}개")
     
@@ -153,7 +144,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
         print(f"경고: {len(all_ingredients)}개 재료가 수집되었지만 신규 등록된 항목이 없습니다.")
         print(f"   모든 재료가 이미 재고에 존재하거나 등록에 실패했을 수 있습니다.")
     
-    # 메뉴들 저장
     created_menus = []
     menus_created = 0
     menus_updated = 0
@@ -214,7 +204,6 @@ def create_menu_from_csv(db: Session, csv_content: str, mode: str = "add") -> Tu
 
 
 def get_menu_ingredients(db: Session, menu_name: str) -> List[Dict]:
-    """메뉴 이름으로 재료 리스트 조회"""
     menu = db.query(Menu).filter(Menu.name == menu_name).first()
     if not menu:
         return []
@@ -230,6 +219,5 @@ def get_menu_ingredients(db: Session, menu_name: str) -> List[Dict]:
 
 
 def get_all_menus(db: Session):
-    """모든 메뉴 조회"""
     return db.query(Menu).all()
 
