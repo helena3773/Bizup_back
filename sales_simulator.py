@@ -2,7 +2,7 @@ import asyncio
 import random
 import httpx
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 import time
 import os
 import glob
@@ -16,6 +16,7 @@ class SalesSimulator:
         self.simulation_mode = simulation_mode
         self.dummy_csv_file = dummy_csv_file
         self.menus = []
+        self._script_dir = os.path.dirname(os.path.abspath(__file__))
         
     async def fetch_menus(self) -> List[str]:
         urls_to_try = [
@@ -72,7 +73,6 @@ class SalesSimulator:
         return sales
     
     async def send_sales_to_backend(self, sales: List[Dict]):
-        """매출 데이터를 백엔드로 전송"""
         if not sales:
             return
         
@@ -94,7 +94,6 @@ class SalesSimulator:
             print(f"매출 전송 오류: {e}")
     
     async def check_backend_connection(self) -> bool:
-        """백엔드 서버 연결 확인"""
         try:
             async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
                 response = await client.get(f"{self.backend_url}/health")
@@ -103,39 +102,76 @@ class SalesSimulator:
             return False
     
     def get_dummy_csv_files(self) -> List[str]:
-        """dummy_data 폴더에서 CSV 파일 목록 가져오기"""
-        dummy_dir = os.path.join(os.path.dirname(__file__), "dummy_data")
+        dummy_dir = os.path.join(self._script_dir, "dummy_data")
         if not os.path.exists(dummy_dir):
             return []
         
         csv_files = glob.glob(os.path.join(dummy_dir, "*.csv"))
         return [os.path.basename(f) for f in csv_files]
-    
-    async def load_dummy_csv(self, csv_filename: Optional[str] = None) -> bool:
-        """dummy_data 폴더의 CSV 파일을 백엔드에 업로드"""
-        dummy_dir = os.path.join(os.path.dirname(__file__), "dummy_data")
-        
+
+    def resolve_csv_file(self, csv_filename: Optional[str] = None) -> Optional[Tuple[str, str, bool]]:
+        dummy_dir = os.path.join(self._script_dir, "dummy_data")
+        dummy_dir_norm = os.path.normcase(os.path.normpath(dummy_dir))
         if csv_filename:
-            csv_path = os.path.join(dummy_dir, csv_filename)
-            if not os.path.exists(csv_path):
-                print(f"CSV 파일을 찾을 수 없습니다: {csv_filename}")
-                return False
+            candidate_paths = []
+            if os.path.isabs(csv_filename):
+                candidate_paths.append(csv_filename)
+            else:
+                candidate_paths.append(os.path.abspath(csv_filename))
+                candidate_paths.append(os.path.join(self._script_dir, csv_filename))
+                candidate_paths.append(os.path.join(dummy_dir, csv_filename))
+            seen = set()
+            normalized_paths = []
+            for path in candidate_paths:
+                norm_path = os.path.normpath(path)
+                if norm_path in seen:
+                    continue
+                seen.add(norm_path)
+                normalized_paths.append(norm_path)
+                if os.path.isfile(norm_path):
+                    norm_case_path = os.path.normcase(norm_path)
+                    return (
+                        norm_path,
+                        os.path.basename(norm_path),
+                        not norm_case_path.startswith(dummy_dir_norm)
+                    )
+            print(f"CSV 파일을 찾을 수 없습니다: {csv_filename}")
+            print("   확인한 경로:")
+            for path in normalized_paths:
+                print(f"     - {path}")
+            return None
         else:
             csv_files = glob.glob(os.path.join(dummy_dir, "*.csv"))
             if not csv_files:
                 print("dummy_data 폴더에 CSV 파일이 없습니다.")
-                return False
-            csv_path = random.choice(csv_files)
-            csv_filename = os.path.basename(csv_path)
+                print("   수동으로 CSV 파일을 업로드하세요: POST /api/v1/menus/upload-csv")
+                return None
+            selected_path = random.choice(csv_files)
+            selected_norm_case = os.path.normcase(os.path.normpath(selected_path))
+            return (
+                selected_path,
+                os.path.basename(selected_path),
+                False if selected_norm_case.startswith(dummy_dir_norm) else True
+            )
+    
+    async def load_dummy_csv(self, csv_filename: Optional[str] = None) -> bool:
+        csv_info = self.resolve_csv_file(csv_filename)
+        if not csv_info:
+            return False
         
-        print(f"CSV 파일 로드: {csv_filename}")
+        csv_path, csv_display_name, is_custom = csv_info
+        if is_custom:
+            print(f"사용자 CSV 파일 로드: {csv_display_name}")
+            print(f"   경로: {csv_path}")
+        else:
+            print(f"CSV 파일 로드: {csv_display_name}")
         
         try:
             with open(csv_path, 'r', encoding='utf-8') as f:
                 csv_content = f.read()
             
             async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-                files = {"file": (csv_filename, csv_content.encode('utf-8'), "text/csv")}
+                files = {"file": (csv_display_name, csv_content.encode('utf-8'), "text/csv")}
                 response = await client.post(
                     f"{self.backend_url}/api/v1/menus/upload-csv",
                     files=files
@@ -155,7 +191,6 @@ class SalesSimulator:
             return False
     
     async def run(self):
-        """시뮬레이터 실행"""
         print("가상 매출 시뮬레이터 시작...")
         print(f"{self.interval_seconds}초마다 매출 데이터 생성")
         print(f"백엔드 서버: {self.backend_url}")
@@ -174,19 +209,23 @@ class SalesSimulator:
         print()
         
         if self.simulation_mode:
-            print("시뮬레이션 모드: dummy_data에서 CSV 파일 자동 로드")
-            csv_files = self.get_dummy_csv_files()
-            if csv_files:
-                if self.dummy_csv_file and self.dummy_csv_file in csv_files:
-                    selected_file = self.dummy_csv_file
-                else:
-                    selected_file = random.choice(csv_files)
-                print(f"사용 가능한 CSV 파일: {', '.join(csv_files)}")
-                print(f"선택된 파일: {selected_file}")
-                await self.load_dummy_csv(selected_file)
+            print("시뮬레이션 모드: CSV 파일을 자동으로 백엔드에 업로드합니다.")
+            csv_loaded = False
+            if self.dummy_csv_file:
+                csv_loaded = await self.load_dummy_csv(self.dummy_csv_file)
+                if not csv_loaded:
+                    print("지정한 CSV 파일을 로드하지 못했습니다. 경로를 다시 확인하세요.")
             else:
-                print("dummy_data 폴더에 CSV 파일이 없습니다.")
-                print("   수동으로 CSV 파일을 업로드하세요: POST /api/v1/menus/upload-csv")
+                csv_files = self.get_dummy_csv_files()
+                if csv_files:
+                    print(f"사용 가능한 CSV 파일: {', '.join(csv_files)}")
+                    selected_file = random.choice(csv_files)
+                    print(f"선택된 파일: {selected_file}")
+                    csv_loaded = await self.load_dummy_csv(selected_file)
+                else:
+                    csv_loaded = False
+            if not csv_loaded:
+                print("   CSV 업로드에 실패했습니다. 이미 백엔드에 메뉴가 준비된 경우 계속 진행할 수 있습니다.")
             print()
         
         while True:
@@ -225,7 +264,7 @@ if __name__ == "__main__":
     parser.add_argument("--url", default=None, help="백엔드 서버 URL")
     parser.add_argument("--interval", type=int, default=60, help="매출 생성 주기 (초)")
     parser.add_argument("--no-simulation", action="store_true", help="시뮬레이션 모드 비활성화 (사용자가 직접 CSV 업로드)")
-    parser.add_argument("--csv", default=None, help="사용할 dummy CSV 파일명 (시뮬레이션 모드일 때)")
+    parser.add_argument("--csv", default=None, help="사용할 CSV 파일 경로나 파일명 (시뮬레이션 모드일 때)")
     
     args = parser.parse_args()
     
