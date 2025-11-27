@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from app.models.inventory import InventoryItem
 from app.schemas.inventory import InventoryItemCreate, InventoryItemUpdate
 from datetime import date
@@ -84,4 +84,19 @@ def get_low_stock_items(db: Session):
 
 def get_out_of_stock_items(db: Session):
     return db.query(InventoryItem).filter(InventoryItem.quantity == 0).all()
+
+
+def has_uninitialized_inventory(db: Session) -> bool:
+    placeholder_exists = db.query(InventoryItem).filter(
+        or_(
+            InventoryItem.category == "-",
+            InventoryItem.unit == "-",
+            and_(
+                InventoryItem.quantity == 0,
+                InventoryItem.min_quantity == 0,
+                InventoryItem.price == 0
+            )
+        )
+    ).first()
+    return placeholder_exists is not None
 

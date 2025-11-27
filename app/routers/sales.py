@@ -22,6 +22,8 @@ class SalesReceiveRequest(BaseModel):
 
 @router.post("/receive")
 def receive_sales(sales_data: SalesReceiveRequest, db: Session = Depends(get_db)):
+    if inventory_service.has_uninitialized_inventory(db):
+        raise HTTPException(status_code=400, detail="재고 초기화가 완료되지 않아 실시간 차감을 수행할 수 없습니다.")
     results = []
     
     for sale in sales_data.sales:
