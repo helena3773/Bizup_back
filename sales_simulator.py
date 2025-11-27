@@ -18,13 +18,9 @@ class SalesSimulator:
         self.simulation_mode = simulation_mode
         self.menus = []
         self._script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.user_csv_file = dummy_csv_file
         default_csv_path = os.path.join(self._script_dir, "dummy_data", self.DEFAULT_DUMMY_FILENAME)
-        if dummy_csv_file:
-            self.dummy_csv_file = dummy_csv_file
-        elif os.path.exists(default_csv_path):
-            self.dummy_csv_file = self.DEFAULT_DUMMY_FILENAME
-        else:
-            self.dummy_csv_file = None
+        self.default_csv_file = self.DEFAULT_DUMMY_FILENAME if os.path.exists(default_csv_path) else None
         
     async def fetch_menus(self) -> List[str]:
         urls_to_try = [
@@ -217,24 +213,32 @@ class SalesSimulator:
         print("백엔드 서버 연결 성공!")
         print()
         
+        initial_menus = await self.fetch_menus()
+        if initial_menus:
+            self.menus = initial_menus
+        
         if self.simulation_mode:
-            print("시뮬레이션 모드: CSV 파일을 자동으로 백엔드에 업로드합니다.")
+            print("시뮬레이션 모드: 백엔드 메뉴 구성을 자동으로 감지합니다.")
             csv_loaded = False
-            if self.dummy_csv_file:
-                csv_loaded = await self.load_dummy_csv(self.dummy_csv_file)
+            if self.user_csv_file:
+                print(f"사용자 지정 CSV로 메뉴를 초기화합니다: {self.user_csv_file}")
+                csv_loaded = await self.load_dummy_csv(self.user_csv_file)
                 if not csv_loaded:
                     print("지정한 CSV 파일을 로드하지 못했습니다. 경로를 다시 확인하세요.")
+            elif self.menus:
+                print(f"백엔드에 이미 {len(self.menus)}개 메뉴가 등록되어 있어 해당 데이터로 시뮬레이션을 시작합니다.")
             else:
-                csv_files = self.get_dummy_csv_files()
-                if csv_files:
-                    print(f"사용 가능한 CSV 파일: {', '.join(csv_files)}")
-                    selected_file = random.choice(csv_files)
-                    print(f"선택된 파일: {selected_file}")
-                    csv_loaded = await self.load_dummy_csv(selected_file)
-                else:
-                    csv_loaded = False
-            if not csv_loaded:
-                print("   CSV 업로드에 실패했습니다. 이미 백엔드에 메뉴가 준비된 경우 계속 진행할 수 있습니다.")
+                print("등록된 메뉴가 없어 기본 CSV 업로드를 시도합니다.")
+                if self.default_csv_file:
+                    csv_loaded = await self.load_dummy_csv(self.default_csv_file)
+                if not csv_loaded:
+                    csv_loaded = await self.load_dummy_csv()
+                if not csv_loaded:
+                    print("   CSV 업로드에 실패했습니다. 직접 메뉴를 등록한 뒤 다시 시도하세요.")
+            if csv_loaded:
+                refreshed_menus = await self.fetch_menus()
+                if refreshed_menus:
+                    self.menus = refreshed_menus
             print()
         
         while True:
