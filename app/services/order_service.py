@@ -6,14 +6,6 @@ from app.schemas.order import OrderCreate
 from typing import List, Dict
 
 
-def calculate_avg_daily_usage(inventory_item: InventoryItem, days: int = 7) -> float:
-    # TODO: 실제 판매 데이터를 기반으로 계산하도록 수정할 예정정
-    if inventory_item.quantity == 0:
-        return 1.0
-    
-    estimated_usage = max(0.5, inventory_item.min_quantity / 30.0)
-    return estimated_usage
-
 
 def calculate_days_until_out_of_stock(current_stock: float, avg_daily: float) -> int:
     if avg_daily <= 0:
@@ -40,8 +32,6 @@ def determine_priority(days_until_out: int) -> OrderPriority:
     else:
         return OrderPriority.LOW
 
-
-def get_order_recommendations(db: Session) -> List[Dict]:
     inventory_items = db.query(InventoryItem).all()
     recommendations = []
     

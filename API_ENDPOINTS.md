@@ -15,7 +15,7 @@ GET /api/v1/inventory
 ```
 **쿼리 파라미터**:
 - `skip`: int (기본값: 0) - 건너뛸 항목 수
-- `limit`: int (기본값: 100, 최대: 1000) - 조회할 항목 수
+- `limit`: int (기본값: 1000, 최대: 10000) - 조회할 항목 수
 - `search`: string (선택) - 검색어 (상품명 또는 카테고리)
 
 **응답 예시**:
@@ -41,14 +41,6 @@ GET /api/v1/inventory
 ```
 GET /api/v1/inventory/stats
 ```
-**응답 예시**:
-```json
-{
-  "total_items": 150,
-  "low_stock_count": 12,
-  "out_of_stock_count": 3
-}
-```
 
 ### 재고 부족 목록
 ```
@@ -64,39 +56,16 @@ GET /api/v1/inventory/{item_id}
 ```
 POST /api/v1/inventory
 ```
-**응답**: 201 Created
-
-**요청 본문**:
-```json
-{
-  "name": "새 상품",
-  "category": "음료",
-  "quantity": 100,
-  "unit": "개",
-  "min_quantity": 50,
-  "price": 1000
-}
-```
 
 ### 재고 수정
 ```
 PUT /api/v1/inventory/{item_id}
-```
-**응답**: 200 OK
-
-**요청 본문** (모든 필드 선택):
-```json
-{
-  "quantity": 150,
-  "price": 1200
-}
 ```
 
 ### 재고 삭제
 ```
 DELETE /api/v1/inventory/{item_id}
 ```
-**응답**: 204 No Content
 
 ---
 
@@ -143,6 +112,133 @@ POST /api/v1/orders
       "inventory_item_id": 2,
       "quantity": 10,
       "priority": "medium"
+    }
+  ]
+}
+```
+
+---
+
+## 메뉴 관리 (Menus)
+
+### 메뉴 CSV 업로드 (추가/초기화)
+```
+POST /api/v1/menus/upload-csv?mode={add|reset}
+```
+- **mode**  
+  - `add` (기본값): 기존 메뉴는 유지하고, 동일한 이름의 메뉴는 재료 정보를 갱신하거나 추가합니다.  
+  - `reset`: 기존 메뉴/재료/재고를 모두 삭제한 뒤 업로드한 CSV 기준으로 완전히 재구성합니다.
+- **요청**: `multipart/form-data`, 필수 필드 `file`
+
+**응답 예시 (성공)**:
+```json
+{
+  "success": true,
+  "mode": "add",
+  "message": "[추가] 12개 메뉴 데이터를 처리했습니다. (신규 4개, 업데이트 8개)",
+  "menus_count": 12,
+  "menus_created": 4,
+  "menus_updated": 8,
+  "ingredients_registered": 25,
+  "ingredient_names": ["물", "에스프레소샷", "..."],
+  "total_inventory_count": 58,
+  "ingredient_inventory_count": 34,
+  "menus": [
+    {
+      "id": 1,
+      "name": "아메리카노",
+      "ingredients": [
+        {
+          "ingredient_name": "물",
+          "quantity": 200,
+          "unit": "ml"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**응답 예시 (실패)**:
+```json
+{
+  "success": false,
+  "mode": "reset",
+  "message": "CSV 파싱 오류 ..."
+}
+```
+
+### 메뉴 목록 조회
+```
+GET /api/v1/menus
+```
+**응답**: 메뉴 이름과 재료 목록만 포함됩니다.
+```json
+[
+  {
+    "id": 1,
+    "name": "아이스 라떼",
+    "ingredients": [
+      { "ingredient_name": "에스프레소샷", "quantity": 2, "unit": "shot" },
+      { "ingredient_name": "우유", "quantity": 180, "unit": "ml" },
+      { "ingredient_name": "얼음", "quantity": 150, "unit": "g" }
+    ]
+  }
+]
+```
+
+---
+
+## 매출 관리 (Sales)
+
+### 매출 데이터 수신
+```
+POST /api/v1/sales/receive
+```
+**요청 본문**:
+```json
+{
+  "sales": [
+    {
+      "menu_name": "아이스 라떼",
+      "quantity": 3,
+      "timestamp": "2025-10-09T12:34:56"
+    },
+    {
+      "menu_name": "크림 파스타",
+      "quantity": 1,
+      "timestamp": "2025-10-09T12:35:02"
+    }
+  ]
+}
+```
+서버는 각 메뉴에 매핑된 재료 기준으로 재고를 자동 차감하고, 부족/품절 상태 변화가 있으면 경고 메시지를 포함한 결과를 반환합니다.
+
+**응답 예시**:
+```json
+{
+  "results": [
+    {
+      "menu_name": "아이스 라떼",
+      "quantity": 3,
+      "status": "success",
+      "deducted_items": [
+        {
+          "ingredient": "우유",
+          "deducted": 540,
+          "remaining": 1260,
+          "status": "정상",
+          "status_changed": false
+        },
+        {
+          "ingredient": "얼음",
+          "deducted": 450,
+          "remaining": 50,
+          "status": "부족",
+          "status_changed": true,
+          "warning": "얼음 재고가 부족합니다!"
+        }
+      ]
     }
   ]
 }
