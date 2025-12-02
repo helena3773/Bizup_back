@@ -8,9 +8,9 @@ from app.models import (
     OrderItem,
     Employee,
     Store,
-    NotificationSettings
+    NotificationSettings,
 )
-from app.routers import inventory, orders, outofstock, employees, store, sales, menus
+from app.routers import inventory, orders, outofstock, employees, store, sales, menus, auth
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -20,7 +20,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS or ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +37,7 @@ app.include_router(employees.router, prefix=settings.API_V1_PREFIX)
 app.include_router(store.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sales.router, prefix=settings.API_V1_PREFIX)
 app.include_router(menus.router, prefix=settings.API_V1_PREFIX)
+app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
