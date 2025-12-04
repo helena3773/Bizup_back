@@ -9,6 +9,9 @@ from app.models import (
     Employee,
     Store,
     NotificationSettings,
+    Menu,
+    MenuIngredient,
+    User,
 )
 from app.routers import inventory, orders, outofstock, employees, store, sales, menus, auth
 
