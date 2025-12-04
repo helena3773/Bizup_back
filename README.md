@@ -53,10 +53,14 @@ pip install -r requirements.txt
 ```
 
 2. 환경 변수 설정 (.env 파일 생성):
-```
-DATABASE_URL=sqlite:미정
-SECRET_KEY=미정
-```
+   - `back/.env.example` 파일을 참고하여 `back/.env` 파일을 생성하세요.
+   - 또는 다음 내용으로 `.env` 파일을 생성:
+   ```
+   DATABASE_URL=sqlite:///./data/bizup.db
+   SECRET_KEY=your-secret-key-change-this-in-production
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=bizup1234
+   ```
 
 3. 서버 실행:
 ```bash
@@ -88,3 +92,76 @@ CSV 파일로 메뉴를 등록하고, 가상 매출 시뮬레이터를 통해 �
 - `python sales_simulator.py --csv "경로/파일명.csv"` 형태로 실행하면,
   - 절대 경로, 상대 경로, `back/dummy_data` 폴더 모두 자동 탐색
   - 지정한 CSV를 백엔드에 업로드한 뒤 해당 메뉴 구성을 기준으로 매출 시뮬레이션을 진행하며, 기존 메뉴가 있더라도 이 파일로 다시 초기화
+
+## 서버 배포 가이드
+
+### 데이터베이스 설정 (중요!)
+
+이 프로젝트는 SQLite 데이터베이스를 사용하며, 데이터는 `data/` 디렉토리에 저장됩니다. 
+서버 배포 시 데이터 손실을 방지하기 위해 다음 단계를 따르세요:
+
+#### 1. 로컬에서 기존 데이터베이스 파일 이동
+
+기존 `bizup.db` 파일이 있다면 `data/` 디렉토리로 이동:
+
+```bash
+# back 디렉토리에서 실행
+mkdir -p data
+mv bizup.db data/bizup.db  # Windows: move bizup.db data\bizup.db
+```
+
+#### 2. 서버 배포 준비
+
+1. **환경 변수 파일 생성**
+   - 서버의 `back/` 디렉토리에 `.env` 파일 생성
+   - `.env.example` 파일을 참고하여 작성
+   - 또는 다음 내용으로 생성:
+   ```env
+   DATABASE_URL=sqlite:///./data/bizup.db
+   SECRET_KEY=your-secret-key-change-this-in-production
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=bizup1234
+   ```
+
+2. **데이터 디렉토리 생성 및 권한 설정** (Linux/Mac)
+   ```bash
+   mkdir -p data
+   chmod 755 data
+   ```
+
+3. **기존 데이터베이스 파일 복사** (첫 배포가 아닌 경우)
+   - 로컬의 `back/data/bizup.db` 파일을 서버의 `back/data/` 디렉토리로 복사
+   - 또는 서버에서 직접 데이터베이스 파일을 생성한 경우, 해당 파일을 유지
+
+#### 3. 서버에서 실행
+
+```bash
+# 가상환경 활성화 (필요한 경우)
+source venv/bin/activate  # Linux/Mac
+# 또는
+venv\Scripts\activate  # Windows
+
+# 서버 실행
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+#### 4. 데이터베이스 백업 (권장)
+
+정기적으로 `data/bizup.db` 파일을 백업하세요:
+
+```bash
+# 백업
+cp data/bizup.db data/bizup.db.backup
+
+# 복원 (필요한 경우)
+cp data/bizup.db.backup data/bizup.db
+```
+
+### 주의사항
+
+- **데이터 디렉토리**: `data/` 디렉토리는 Git에 커밋되지 않습니다 (`.gitignore`에 포함)
+- **환경 변수**: `.env` 파일도 Git에 커밋되지 않으므로, 서버에서 별도로 생성해야 합니다
+- **데이터 보존**: 서버 재시작 시에도 `data/bizup.db` 파일이 유지되므로 회원 정보가 사라지지 않습니다
+- **절대 경로 사용**: 필요시 `.env`에서 절대 경로 사용 가능
+  - Linux: `DATABASE_URL=sqlite:////var/lib/bizup/bizup.db`
+  - Windows: `DATABASE_URL=sqlite:///C:/data/bizup.db`
