@@ -53,14 +53,7 @@ pip install -r requirements.txt
 ```
 
 2. 환경 변수 설정 (.env 파일 생성):
-   - `back/.env.example` 파일을 참고하여 `back/.env` 파일을 생성하세요.
-   - 또는 다음 내용으로 `.env` 파일을 생성:
-   ```
-   DATABASE_URL=sqlite:///./data/bizup.db
-   SECRET_KEY=your-secret-key-change-this-in-production
-   ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=bizup1234
-   ```
+   - `back/.env` 파일을 생성하세요.
 
 3. 서버 실행:
 ```bash
