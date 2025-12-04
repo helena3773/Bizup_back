@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -52,8 +52,18 @@ class OutOfStockItemResponse(BaseModel):
     last_stock: float
     unit: str
     estimated_loss: float
-    status: str  # 'critical' | 'warning' | 'recent'
+    status: str
 
     class Config:
         from_attributes = True
 
+
+class OutOfStockMenuResponse(BaseModel):
+    id: int
+    name: str
+    missing_ingredients: List[str]
+    days_out_of_stock: int
+    status: str
+
+    class Config:
+        from_attributes = True

@@ -47,7 +47,12 @@ def update_inventory_item(db: Session, item_id: int, item: InventoryItemUpdate):
     if not db_item:
         return None
     
-    update_data = item.dict(exclude_unset=True)
+    # Pydantic v2 호환: model_dump 사용, 없으면 dict 사용
+    if hasattr(item, 'model_dump'):
+        update_data = item.model_dump(exclude_unset=True)
+    else:
+        update_data = item.dict(exclude_unset=True)
+    
     for field, value in update_data.items():
         setattr(db_item, field, value)
     

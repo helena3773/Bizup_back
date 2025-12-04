@@ -2,15 +2,26 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
-from app.schemas.store import OutOfStockItemResponse
+from app.schemas.store import OutOfStockItemResponse, OutOfStockMenuResponse
 from app.services import analytics_service, inventory_service
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/out-of-stock", tags=["품절 관리"])
 
 
-@router.get("/", response_model=List[OutOfStockItemResponse])
+class OutOfStockResponse(BaseModel):
+    items: List[OutOfStockItemResponse]
+    menus: List[OutOfStockMenuResponse]
+
+
+@router.get("/", response_model=OutOfStockResponse)
 def get_out_of_stock_items(db: Session = Depends(get_db)):
-    return analytics_service.get_out_of_stock_items(db)
+    items = analytics_service.get_out_of_stock_items(db)
+    menus = analytics_service.get_out_of_stock_menus(db)
+    return {
+        "items": items,
+        "menus": menus
+    }
 
 
 @router.post("/{item_id}/restock")
