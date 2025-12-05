@@ -11,7 +11,7 @@ import glob
 class SalesSimulator:
     DEFAULT_DUMMY_FILENAME = "small_file.csv"
 
-    def __init__(self, backend_url: str = "http://127.0.0.1:8000", interval_seconds: int = 60, # 평소에는 600으로
+    def __init__(self, backend_url: str = "http://127.0.0.1:8000", interval_seconds: int = 10, # 평소에는 300으로
                  simulation_mode: bool = True, dummy_csv_file: Optional[str] = None):
         self.backend_url = backend_url
         self.interval_seconds = interval_seconds
@@ -102,6 +102,18 @@ class SalesSimulator:
             async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
                 response = await client.get(f"{self.backend_url}/health")
                 return response.status_code == 200
+        except:
+            return False
+    
+    async def check_simulator_status(self) -> bool:
+        """백엔드에서 시뮬레이터 일시정지 상태 확인 (True = 일시정지됨, False = 실행 중)"""
+        try:
+            async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+                response = await client.get(f"{self.backend_url}/api/v1/sales/simulator/status")
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("paused", False)
+                return False
         except:
             return False
     
@@ -243,6 +255,13 @@ class SalesSimulator:
         
         while True:
             try:
+                # 시뮬레이터 일시정지 상태 확인
+                is_paused = await self.check_simulator_status()
+                if is_paused:
+                    print("시뮬레이터 일시정지 중... (재개 대기 중)")
+                    await asyncio.sleep(self.interval_seconds)
+                    continue
+                
                 menus = await self.fetch_menus()
                 if menus:
                     self.menus = menus
@@ -275,7 +294,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="가상 매출 시뮬레이터")
     parser.add_argument("--url", default=None, help="백엔드 서버 URL")
-    parser.add_argument("--interval", type=int, default=60, help="매출 생성 주기 (초)")
+    parser.add_argument("--interval", type=int, default=10, help="매출 생성 주기 (초)")
     parser.add_argument("--no-simulation", action="store_true", help="시뮬레이션 모드 비활성화 (사용자가 직접 CSV 업로드)")
     parser.add_argument("--csv", default=None, help="사용할 CSV 파일 경로나 파일명 (시뮬레이션 모드일 때)")
     

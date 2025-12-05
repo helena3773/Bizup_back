@@ -9,6 +9,8 @@ from app.models.inventory import InventoryItem
 
 router = APIRouter(prefix="/sales", tags=["매출 관리"])
 
+_simulator_paused = False
+
 
 class SaleItem(BaseModel):
     menu_name: str
@@ -100,4 +102,23 @@ def receive_sales(sales_data: SalesReceiveRequest, db: Session = Depends(get_db)
             })
     
     return {"results": results}
+
+
+@router.get("/simulator/status")
+def get_simulator_status():
+    return {"paused": _simulator_paused}
+
+
+@router.post("/simulator/pause")
+def pause_simulator():
+    global _simulator_paused
+    _simulator_paused = True
+    return {"message": "시뮬레이터가 일시정지되었습니다.", "paused": True}
+
+
+@router.post("/simulator/resume")
+def resume_simulator():
+    global _simulator_paused
+    _simulator_paused = False
+    return {"message": "시뮬레이터가 재개되었습니다.", "paused": False}
 
