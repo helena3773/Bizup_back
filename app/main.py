@@ -12,8 +12,9 @@ from app.models import (
     Menu,
     MenuIngredient,
     User,
+    Contract,
 )
-from app.routers import inventory, orders, outofstock, employees, store, sales, menus, auth
+from app.routers import inventory, orders, outofstock, employees, store, sales, menus, auth, contracts
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -41,6 +42,7 @@ app.include_router(store.router, prefix=settings.API_V1_PREFIX)
 app.include_router(sales.router, prefix=settings.API_V1_PREFIX)
 app.include_router(menus.router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth.router, prefix=settings.API_V1_PREFIX)
+app.include_router(contracts.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

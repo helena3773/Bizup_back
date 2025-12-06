@@ -4,6 +4,7 @@ from app.models.employee import Employee
 from app.models.store import Store, NotificationSettings
 from app.models.menu import Menu, MenuIngredient
 from app.models.user import User
+from app.models.contract import Contract
 
 __all__ = [
     "InventoryItem",
@@ -15,5 +16,6 @@ __all__ = [
     "Menu",
     "MenuIngredient",
     "User",
+    "Contract",
 ]
 

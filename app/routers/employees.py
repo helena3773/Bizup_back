@@ -4,6 +4,7 @@ from typing import List
 from app.database import get_db
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate, EmployeeResponse
 from app.models.employee import Employee
+from app.models.contract import Contract
 
 router = APIRouter(prefix="/employees", tags=["직원 관리"])
 
@@ -61,7 +62,17 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     if not employee:
         raise HTTPException(status_code=404, detail="직원을 찾을 수 없습니다")
     
-    db.delete(employee)
-    db.commit()
-    return None
+    try:
+        # 관련 계약서 먼저 삭제 (SQLite에서 CASCADE DELETE가 제대로 작동하지 않을 수 있음)
+        contracts = db.query(Contract).filter(Contract.employee_id == employee_id).all()
+        for contract in contracts:
+            db.delete(contract)
+        
+        # 직원 삭제
+        db.delete(employee)
+        db.commit()
+        return None
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"직원 삭제 중 오류가 발생했습니다: {str(e)}")
 
