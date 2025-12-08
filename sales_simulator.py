@@ -208,22 +208,37 @@ class SalesSimulator:
             return False
     
     async def run(self):
-        print("가상 매출 시뮬레이터 시작...")
-        print(f"{self.interval_seconds}초마다 매출 데이터 생성")
-        print(f"백엔드 서버: {self.backend_url}")
-        print()
+        import sys
+        print("가상 매출 시뮬레이터 시작...", flush=True)
+        print(f"{self.interval_seconds}초마다 매출 데이터 생성", flush=True)
+        print(f"백엔드 서버: {self.backend_url}", flush=True)
+        print(flush=True)
         
-        print("백엔드 서버 연결 확인 중...")
-        if not await self.check_backend_connection():
-            print(f"백엔드 서버에 연결할 수 없습니다: {self.backend_url}")
-            print("   다음 명령어로 백엔드 서버를 먼저 실행하세요:")
-            print("   cd back")
-            print("   uvicorn app.main:app --reload")
-            print()
-            print("   서버가 실행되면 시뮬레이터를 다시 시작하세요.")
+        # 백엔드 서버 연결 확인 (재시도 로직 포함)
+        print("백엔드 서버 연결 확인 중...", flush=True)
+        max_retries = 30
+        retry_count = 0
+        backend_connected = False
+        
+        while retry_count < max_retries:
+            if await self.check_backend_connection():
+                backend_connected = True
+                print("백엔드 서버 연결 성공!", flush=True)
+                break
+            retry_count += 1
+            if retry_count % 5 == 0:
+                print(f"백엔드 서버 연결 대기 중... (시도 {retry_count}/{max_retries})", flush=True)
+            await asyncio.sleep(2)
+        
+        if not backend_connected:
+            print(f"백엔드 서버에 연결할 수 없습니다: {self.backend_url}", flush=True)
+            print("   다음 명령어로 백엔드 서버를 먼저 실행하세요:", flush=True)
+            print("   cd back", flush=True)
+            print("   uvicorn app.main:app --reload", flush=True)
+            print(flush=True)
+            print("   서버가 실행되면 시뮬레이터를 다시 시작하세요.", flush=True)
             return
-        print("백엔드 서버 연결 성공!")
-        print()
+        print(flush=True)
         
         initial_menus = await self.fetch_menus()
         if initial_menus:
@@ -258,33 +273,33 @@ class SalesSimulator:
                 # 시뮬레이터 일시정지 상태 확인
                 is_paused = await self.check_simulator_status()
                 if is_paused:
-                    print("시뮬레이터 일시정지 중... (재개 대기 중)")
+                    print("시뮬레이터 일시정지 중... (재개 대기 중)", flush=True)
                     await asyncio.sleep(self.interval_seconds)
                     continue
                 
                 menus = await self.fetch_menus()
                 if menus:
                     self.menus = menus
-                    print(f"메뉴 {len(menus)}개 로드됨")
+                    print(f"메뉴 {len(menus)}개 로드됨", flush=True)
                 elif not self.menus:
-                    print("등록된 메뉴가 없습니다. CSV 파일을 먼저 업로드하세요.")
-                    print("   API: POST /api/v1/menus/upload-csv")
+                    print("등록된 메뉴가 없습니다. CSV 파일을 먼저 업로드하세요.", flush=True)
+                    print("   API: POST /api/v1/menus/upload-csv", flush=True)
                 
                 if self.menus:
                     sales = self.generate_sales(self.menus)
                     if sales:
-                        print(f"생성된 매출: {sales}")
+                        print(f"생성된 매출: {sales}", flush=True)
                         await self.send_sales_to_backend(sales)
                     else:
-                        print("이번 주기는 매출 없음")
+                        print("이번 주기는 매출 없음", flush=True)
                 
-                print(f"{self.interval_seconds}초 대기 중...")
+                print(f"{self.interval_seconds}초 대기 중...", flush=True)
                 await asyncio.sleep(self.interval_seconds)
             except KeyboardInterrupt:
-                print("\n시뮬레이터 종료")
+                print("\n시뮬레이터 종료", flush=True)
                 break
             except Exception as e:
-                print(f"오류 발생: {e}")
+                print(f"오류 발생: {e}", flush=True)
                 await asyncio.sleep(self.interval_seconds)
 
 
