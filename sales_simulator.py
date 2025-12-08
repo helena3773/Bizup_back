@@ -294,7 +294,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="가상 매출 시뮬레이터")
     parser.add_argument("--url", default=None, help="백엔드 서버 URL")
-    parser.add_argument("--interval", type=int, default=10, help="매출 생성 주기 (초)")
+    parser.add_argument("--interval", type=int, default=300, help="매출 생성 주기 (초)")
     parser.add_argument("--no-simulation", action="store_true", help="시뮬레이션 모드 비활성화 (사용자가 직접 CSV 업로드)")
     parser.add_argument("--csv", default=None, help="사용할 CSV 파일 경로나 파일명 (시뮬레이션 모드일 때)")
     
