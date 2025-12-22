@@ -28,7 +28,7 @@ back/
 │   ├── routers/             # API 라우터
 │   │   ├── __init__.py
 │   │   ├── inventory.py     # 재고 관리 API
-│   │   ├── orders.py        # 발주 추천 API
+│   │   ├── orders.py        # 발주 사이트 API
 │   │   ├── outofstock.py    # 품절 관리 API
 │   │   ├── employees.py     # 직원 관리 API
 │   │   ├── store.py         # 가게 설정 API

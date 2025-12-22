@@ -71,7 +71,7 @@ DELETE /api/v1/inventory/{item_id}
 
 ## 발주 관리 (Orders)
 
-### 발주 추천 목록
+### 발주 사이트 목록
 ```
 GET /api/v1/orders/recommendations
 ```
