@@ -58,3 +58,9 @@ def root():
 def health_check():
     return {"status": "ok"}
 
+
+@app.get("/.well-known/appspecific/{path:path}")
+def well_known_handler(path: str):
+    """Handle Chrome DevTools well-known requests to prevent 404 logs"""
+    return {"message": "Not available"}
+
